@@ -34,6 +34,12 @@ pub struct UndetectedChrome {
     pub chrome: WebDriver,
 }
 
+impl AsRef<WebDriver> for UndetectedChrome {
+    fn as_ref(&self) -> &WebDriver {
+        &self.chrome
+    }
+}
+
 impl UndetectedChrome {
     pub async fn quit(self) -> anyhow::Result<()> {
         self.chrome.quit().await?;
@@ -80,7 +86,7 @@ impl ChromeBuilder {
     }
 
     pub async fn build(self) -> anyhow::Result<UndetectedChrome> {
-        let mut caps = self.caps.unwrap_or_else(|| DesiredCapabilities::chrome());
+        let mut caps = self.caps.unwrap_or(DesiredCapabilities::chrome());
         let driver = match self.driver {
             Some(d) => d,
             None => Arc::new(start_driver().await?),
@@ -114,6 +120,12 @@ impl ChromeBuilder {
         }
         let chrome = WebDriver::new(&driver.url, caps.clone()).await?;
         Ok(UndetectedChrome { driver, chrome })
+    }
+}
+
+impl Default for ChromeBuilder {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
